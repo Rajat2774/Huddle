@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Chatroom Platform — Test Client</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: #222; }
+  h2 { margin-top: 32px; }
+  section { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  input { padding: 6px 8px; margin: 4px 4px 4px 0; }
+  button { padding: 6px 12px; cursor: pointer; }
+  #messages { list-style: none; padding: 0; height: 240px; overflow-y: auto; border: 1px solid #eee; margin-top: 8px; }
+  #messages li { padding: 4px 8px; border-bottom: 1px solid #f2f2f2; }
+  .system { color: #888; font-style: italic; }
+  .status { font-size: 13px; color: #666; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<h1>Chatroom Platform — Test Client</h1>
+
+<section>
+  <h2>1. Create a room</h2>
+  <input id="topic" placeholder="Topic (e.g. India vs Australia)" size="30" />
+  <input id="creatorNickname" placeholder="Your nickname" size="15" />
+  <input id="durationMinutes" placeholder="Duration (min)" type="number" size="6" value="60" />
+  <button onclick="createRoom()">Create room</button>
+  <div class="status" id="createStatus"></div>
+</section>
+
+<section>
+  <h2>2. Join a room</h2>
+  <input id="roomId" placeholder="Room ID" size="38" />
+  <input id="joinNickname" placeholder="Your nickname" size="15" />
+  <button onclick="joinRoom()">Join</button>
+  <div class="status" id="joinStatus"></div>
+</section>
+
+<section>
+  <h2>3. Chat</h2>
+  <ul id="messages"></ul>
+  <input id="messageBody" placeholder="Type a message..." size="40" onkeydown="if(event.key==='Enter') sendMessage()" />
+  <button onclick="sendMessage()">Send</button>
+</section>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  let currentRoomId = null;
+
+  async function createRoom() {
+    const topic = document.getElementById('topic').value;
+    const creatorNickname = document.getElementById('creatorNickname').value;
+    const durationMinutes = Number(document.getElementById('durationMinutes').value);
+
+    const res = await fetch('/rooms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic, creatorNickname, durationMinutes })
+    });
+    const data = await res.json();
+    const statusEl = document.getElementById('createStatus');
+
+    if (!res.ok) {
+      statusEl.textContent = 'Error: ' + data.error;
+      return;
+    }
+    statusEl.textContent = 'Created room: ' + data.id;
+    document.getElementById('roomId').value = data.id;
+  }
+
+  async function joinRoom() {
+    const roomId = document.getElementById('roomId').value;
+    const nickname = document.getElementById('joinNickname').value;
+    const statusEl = document.getElementById('joinStatus');
+
+    const res = await fetch(`/rooms/${roomId}/join`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nickname })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      statusEl.textContent = 'Error: ' + data.error;
+      return;
+    }
+
+    socket.emit('join_room', { roomId, sessionToken: data.session_token }, (ack) => {
+      if (ack.error) {
+        statusEl.textContent = 'Socket error: ' + ack.error;
+        return;
+      }
+      currentRoomId = roomId;
+      statusEl.textContent = `Joined as ${ack.nickname}. You can chat now.`;
+      loadHistory(roomId);
+    });
+  }
+
+  async function loadHistory(roomId) {
+    const res = await fetch(`/rooms/${roomId}/messages`);
+    const messages = await res.json();
+    const list = document.getElementById('messages');
+    list.innerHTML = '';
+    messages.forEach(appendMessage);
+  }
+
+  function sendMessage() {
+    const input = document.getElementById('messageBody');
+    const body = input.value.trim();
+    if (!body || !currentRoomId) return;
+
+    socket.emit('send_message', { body }, (ack) => {
+      if (ack.error) alert(ack.error);
+    });
+    input.value = '';
+  }
+
+  function appendMessage(msg) {
+    const list = document.getElementById('messages');
+    const li = document.createElement('li');
+    const time = new Date(msg.created_at).toLocaleTimeString();
+    li.textContent = `[${time}] ${msg.nickname}: ${msg.body}`;
+    list.appendChild(li);
+    list.scrollTop = list.scrollHeight;
+  }
+
+  function appendSystem(text) {
+    const list = document.getElementById('messages');
+    const li = document.createElement('li');
+    li.className = 'system';
+    li.textContent = text;
+    list.appendChild(li);
+    list.scrollTop = list.scrollHeight;
+  }
+
+  socket.on('new_message', appendMessage);
+  socket.on('user_joined', (data) => appendSystem(`${data.nickname} joined`));
+  socket.on('user_left', (data) => appendSystem(`${data.nickname} left`));
+</script>
+</body>
+</html>
