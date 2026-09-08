@@ -67,6 +67,10 @@
     }
     statusEl.textContent = 'Created room: ' + data.id;
     document.getElementById('roomId').value = data.id;
+    document.getElementById('joinNickname').value = creatorNickname;
+
+    // The creator should also become a participant, not just the room owner on paper.
+    await joinRoom();
   }
 
   async function joinRoom() {
@@ -137,6 +141,11 @@
   socket.on('new_message', appendMessage);
   socket.on('user_joined', (data) => appendSystem(`${data.nickname} joined`));
   socket.on('user_left', (data) => appendSystem(`${data.nickname} left`));
+  socket.on('room_ended', () => {
+    appendSystem('This room has ended. Chat is now read-only.');
+    document.getElementById('messageBody').disabled = true;
+    document.querySelector('button[onclick="sendMessage()"]').disabled = true;
+  });
 </script>
 </body>
 </html>

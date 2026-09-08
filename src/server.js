@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const app = require('./app');
 const { registerRealtimeHandlers } = require('./realtime');
+const { scheduleAllActiveRooms } = require('./realtime/roomTimers');
 
 const PORT = process.env.PORT || 3000;
 
@@ -15,4 +16,5 @@ registerRealtimeHandlers(io);
 
 server.listen(PORT, () => {
   console.log(`Chatroom API + realtime server listening on port ${PORT}`);
+  scheduleAllActiveRooms(io).catch((err) => console.error('Failed to schedule room timers', err));
 });

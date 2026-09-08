@@ -34,7 +34,21 @@ async function createRoom({ topic, creatorNickname, durationMinutes, maxParticip
   return { ...room, status: deriveStatus(room) };
 }
 
-async function listActiveRooms() {
+async function listActiveRooms(sort = 'ending_soon') {
+  if (sort === 'active') {
+    const result = await query(
+      `SELECT r.*, COUNT(DISTINCT p.id)::int AS participant_count,
+              COUNT(m.id) FILTER (WHERE m.created_at > now() - interval '5 minutes')::int AS recent_message_count
+       FROM rooms r
+       LEFT JOIN participants p ON p.room_id = r.id
+       LEFT JOIN messages m ON m.room_id = r.id
+       WHERE r.active_ends_at > now()
+       GROUP BY r.id
+       ORDER BY recent_message_count DESC, r.active_ends_at ASC`
+    );
+    return result.rows.map((room) => ({ ...room, status: deriveStatus(room) }));
+  }
+
   const result = await query(
     `SELECT r.*, COUNT(p.id)::int AS participant_count
      FROM rooms r

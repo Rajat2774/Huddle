@@ -1,4 +1,5 @@
 const { query } = require('../db');
+const { scheduleRoomEnd } = require('./roomTimers');
 
 function registerRealtimeHandlers(io) {
   io.on('connection', (socket) => {
@@ -18,6 +19,7 @@ function registerRealtimeHandlers(io) {
         socket.data.nickname = participant.nickname;
         socket.join(roomId);
 
+        scheduleRoomEnd(io, room);
         socket.to(roomId).emit('user_joined', { nickname: participant.nickname });
         ack?.({ ok: true, nickname: participant.nickname });
       } catch (err) {
@@ -68,7 +70,7 @@ async function getValidParticipant(roomId, sessionToken) {
 }
 
 async function getRoom(roomId) {
-  const result = await query(`SELECT active_ends_at FROM rooms WHERE id = $1`, [roomId]);
+  const result = await query(`SELECT id, active_ends_at FROM rooms WHERE id = $1`, [roomId]);
   return result.rows[0] || null;
 }
 
