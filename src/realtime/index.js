@@ -20,7 +20,6 @@ function registerRealtimeHandlers(io) {
         socket.join(roomId);
 
         scheduleRoomEnd(io, room);
-        socket.to(roomId).emit('user_joined', { nickname: participant.nickname });
         ack?.({ ok: true, nickname: participant.nickname });
       } catch (err) {
         console.error('join_room error', err);
@@ -52,11 +51,28 @@ function registerRealtimeHandlers(io) {
       }
     });
 
-    socket.on('disconnect', () => {
-      const { roomId, nickname } = socket.data;
-      if (roomId && nickname) {
-        socket.to(roomId).emit('user_left', { nickname });
+    socket.on('leave_room', async ({ sessionToken }, ack) => {
+      try {
+        const roomId = socket.data.roomId;
+        if (roomId && sessionToken) {
+          const { leaveRoom } = require('../services/participantService');
+          const participant = await leaveRoom({ roomId, sessionToken });
+          if (participant) {
+            io.to(roomId).emit('user_left', { nickname: participant.nickname });
+          }
+          socket.leave(roomId);
+          socket.data = {};
+        }
+        ack?.({ ok: true });
+      } catch (err) {
+        console.error('leave_room error', err);
+        ack?.({ error: 'Failed to leave room' });
       }
+    });
+
+    socket.on('disconnect', () => {
+      // Socket disconnection (tab close / refresh / connection drop)
+      // does not remove participant from room. Explicit leave is required.
     });
   });
 }

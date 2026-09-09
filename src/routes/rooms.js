@@ -19,7 +19,7 @@ router.post('/', async (req, res, next) => {
 
 router.get('/', async (req, res, next) => {
   try {
-    const rooms = await roomService.listActiveRooms();
+    const rooms = await roomService.listActiveRooms(req.query.sort);
     res.json(rooms);
   } catch (err) {
     next(err);

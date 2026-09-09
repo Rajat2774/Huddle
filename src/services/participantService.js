@@ -60,4 +60,13 @@ async function joinRoom({ roomId, nickname }) {
   }
 }
 
-module.exports = { joinRoom, generateSessionToken };
+async function leaveRoom({ roomId, sessionToken }) {
+  const result = await pool.query(
+    `DELETE FROM participants WHERE room_id = $1 AND session_token = $2 RETURNING nickname`,
+    [roomId, sessionToken]
+  );
+  return result.rows[0] || null;
+}
+
+module.exports = { joinRoom, leaveRoom, generateSessionToken };
+

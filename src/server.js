@@ -12,6 +12,8 @@ const io = new Server(server, {
   cors: { origin: '*' }
 });
 
+app.set('io', io);
+
 registerRealtimeHandlers(io);
 
 server.listen(PORT, () => {

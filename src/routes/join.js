@@ -11,6 +11,10 @@ router.post('/', async (req, res, next) => {
       throw err;
     }
     const participant = await participantService.joinRoom({ roomId: req.params.id, nickname });
+    const io = req.app.get('io');
+    if (io) {
+      io.to(req.params.id).emit('user_joined', { nickname: participant.nickname });
+    }
     res.status(201).json(participant);
   } catch (err) {
     next(err);
