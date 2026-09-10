@@ -1,6 +1,7 @@
 const path = require('path');
 const express = require('express');
 const roomsRouter = require('./routes/rooms');
+const cors = require('cors')
 const joinRouter = require('./routes/join');
 const leaveRouter = require('./routes/leave');
 const messagesRouter = require('./routes/messages');
@@ -12,6 +13,7 @@ app.use(express.json());
 const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
 app.use(express.static(clientDistPath));
 app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(cors());
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
