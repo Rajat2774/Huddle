@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import logoImg from '../assets/logo.png'
 
 const features = [
   {
@@ -183,9 +184,11 @@ export default function Landing() {
       <footer className="border-t border-[var(--color-border-subtle)] py-8 bg-[var(--color-bg-primary)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-sm bg-[var(--color-forest)] flex items-center justify-center text-[var(--color-accent-lime)] font-bold text-xs">
-              H
-            </div>
+            <img
+              src={logoImg}
+              alt="Huddle Logo"
+              className="w-5 h-5 object-contain"
+            />
             <span className="text-sm font-bold text-[var(--color-forest)]">
               Huddle
             </span>

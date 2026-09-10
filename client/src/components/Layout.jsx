@@ -1,4 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
+import logoImg from '../assets/logo.png'
 
 export default function Layout() {
   const location = useLocation()
@@ -11,9 +12,11 @@ export default function Layout() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-sm bg-[var(--color-forest)] flex items-center justify-center text-[var(--color-accent-lime)] font-extrabold text-sm transition-transform duration-150 group-hover:scale-105">
-              H
-            </div>
+            <img
+              src={logoImg}
+              alt="Huddle Logo"
+              className="w-8 h-8 object-contain transition-transform duration-150 group-hover:scale-105"
+            />
             <span className="text-xl font-black text-[var(--color-forest)] tracking-tight">
               Huddle
             </span>
