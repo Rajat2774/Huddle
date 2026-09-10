@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { setRoomSession } from '../utils/session'
+import { apiFetch } from '../config'
 
 const DURATION_PRESETS = [
   { label: '30 min', value: 30 },
@@ -38,7 +39,7 @@ export default function CreateRoom() {
     setSubmitting(true)
     try {
       // 1. Create the room
-      const createRes = await fetch('/rooms', {
+      const room = await apiFetch('/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -48,17 +49,13 @@ export default function CreateRoom() {
           maxParticipants,
         }),
       })
-      const room = await createRes.json()
-      if (!createRes.ok) throw new Error(room.error || 'Failed to create room')
 
       // 2. Auto-join as the creator
-      const joinRes = await fetch(`/rooms/${room.id}/join`, {
+      const participant = await apiFetch(`/rooms/${room.id}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nickname: nickname.trim() }),
       })
-      const participant = await joinRes.json()
-      if (!joinRes.ok) throw new Error(participant.error || 'Failed to join room')
 
       // Save room session locally so tab close / page refresh keeps the session
       setRoomSession(room.id, participant.session_token, participant.nickname)

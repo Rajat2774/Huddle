@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import NicknameModal from '../components/NicknameModal'
 import { getRoomSession, setRoomSession } from '../utils/session'
+import { apiFetch } from '../config'
 
 function formatCountdown(activeEndsAt) {
   if (!activeEndsAt) return 'Ended'
@@ -20,7 +21,7 @@ function formatCountdown(activeEndsAt) {
 export default function BrowseRooms() {
   const navigate = useNavigate()
   const [rooms, setRooms] = useState([])
-  const [sort, setSort] = useState('ending_soon') // 'ending_soon' | 'active'
+  const [sort, setSort] = useState('recent') // 'recent' | 'active'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -35,9 +36,7 @@ export default function BrowseRooms() {
     if (showSpinner) setLoading(true)
     setError('')
     try {
-      const res = await fetch(`/rooms?sort=${sort}`)
-      if (!res.ok) throw new Error('Failed to load active rooms')
-      const data = await res.json()
+      const data = await apiFetch(`/rooms?sort=${sort}`)
       setRooms(data)
     } catch (err) {
       setError(err.message)
@@ -78,13 +77,11 @@ export default function BrowseRooms() {
     setModalError('')
 
     try {
-      const res = await fetch(`/rooms/${selectedRoom.id}/join`, {
+      const data = await apiFetch(`/rooms/${selectedRoom.id}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nickname }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to join room')
 
       setRoomSession(selectedRoom.id, data.session_token, data.nickname)
       setShowModal(false)

@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import NicknameModal from '../components/NicknameModal'
 import { getRoomSession, setRoomSession, clearRoomSession } from '../utils/session'
+import { API_BASE, apiFetch } from '../config'
 
 // Avatar background color generator based on nickname
 const AVATAR_COLORS = [
@@ -85,25 +86,22 @@ export default function ChatRoom() {
   useEffect(() => {
     async function loadRoomData() {
       try {
-        const roomRes = await fetch(`/rooms/${roomId}`)
-        if (!roomRes.ok) {
-          if (roomRes.status === 404) navigate('/browse', { replace: true })
-          return
-        }
-        const roomData = await roomRes.json()
+        const roomData = await apiFetch(`/rooms/${roomId}`)
         setRoom(roomData)
 
         if (roomData.status === 'archived' || roomData.status === 'expired' || new Date() > new Date(roomData.active_ends_at)) {
           setIsEnded(true)
         }
 
-        const msgRes = await fetch(`/rooms/${roomId}/messages`)
-        if (msgRes.ok) {
-          const msgData = await msgRes.json()
+        try {
+          const msgData = await apiFetch(`/rooms/${roomId}/messages`)
           setMessages(msgData)
+        } catch {
+          // Ignore message load error if room is newly created
         }
       } catch (err) {
         console.error('Error fetching room:', err)
+        navigate('/browse', { replace: true })
       }
     }
     loadRoomData()
@@ -132,13 +130,11 @@ export default function ChatRoom() {
     setJoinError('')
 
     try {
-      const res = await fetch(`/rooms/${roomId}/join`, {
+      const data = await apiFetch(`/rooms/${roomId}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nickname: selectedNickname }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to join room')
 
       setSessionToken(data.session_token)
       setNickname(data.nickname)
@@ -155,7 +151,7 @@ export default function ChatRoom() {
   useEffect(() => {
     if (!sessionToken || !nickname || showNicknameModal) return
 
-    const socket = io()
+    const socket = io(API_BASE || undefined)
     socketRef.current = socket
 
     socket.emit('join_room', { roomId, sessionToken }, (ack) => {
@@ -213,7 +209,7 @@ export default function ChatRoom() {
 
     try {
       if (sessionToken) {
-        await fetch(`/rooms/${roomId}/leave`, {
+        await apiFetch(`/rooms/${roomId}/leave`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionToken }),
