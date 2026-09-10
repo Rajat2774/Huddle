@@ -88,7 +88,18 @@ export default function CreateRoom() {
         </div>
 
         {/* Form Card */}
-        <form onSubmit={handleSubmit} className="bg-white border border-[var(--color-border-subtle)] rounded-sm p-6 sm:p-8 space-y-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="relative bg-white border border-[var(--color-border-subtle)] rounded-sm p-6 sm:p-8 space-y-6 shadow-sm">
+          {/* Close Button */}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-sm text-[var(--color-text-muted)] hover:text-[var(--color-forest)] hover:bg-[var(--color-bg-mint)] transition-all duration-150 cursor-pointer"
+            title="Close"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
           {/* Topic */}
           <div>
             <label htmlFor="topic" className="block text-xs font-bold uppercase tracking-wider text-[var(--color-forest)] mb-2">

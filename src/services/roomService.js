@@ -67,4 +67,9 @@ async function getRoomById(roomId) {
   return { ...room, status: deriveStatus(room) };
 }
 
-module.exports = { createRoom, listActiveRooms, getRoomById, deriveStatus };
+async function deleteRoom(roomId) {
+  const result = await query(`DELETE FROM rooms WHERE id = $1 RETURNING id`, [roomId]);
+  return result.rows.length > 0;
+}
+
+module.exports = { createRoom, listActiveRooms, getRoomById, deriveStatus, deleteRoom };

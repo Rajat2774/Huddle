@@ -40,4 +40,18 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const deleted = await roomService.deleteRoom(req.params.id);
+    if (!deleted) {
+      const err = new Error('Room not found');
+      err.status = 404;
+      throw err;
+    }
+    res.json({ message: 'Room deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

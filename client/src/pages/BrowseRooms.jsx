@@ -96,6 +96,18 @@ export default function BrowseRooms() {
     }
   }
 
+  async function handleDeleteRoom(e, roomId) {
+    e.stopPropagation()
+    if (!confirm('Are you sure you want to delete this room? This action cannot be undone.')) return
+
+    try {
+      await apiFetch(`/rooms/${roomId}`, { method: 'DELETE' })
+      setRooms((prev) => prev.filter((r) => r.id !== roomId))
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   return (
     <div className="relative min-h-[calc(100vh-4rem)] px-4 py-10 max-w-6xl mx-auto">
       <NicknameModal
@@ -195,6 +207,17 @@ export default function BrowseRooms() {
               >
                 {/* Subtle top lime indicator bar */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-[var(--color-accent-lime)] opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                {/* Delete Button */}
+                <button
+                  onClick={(e) => handleDeleteRoom(e, room.id)}
+                  className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-sm text-[var(--color-text-muted)] hover:text-red-600 hover:bg-red-50 transition-all duration-150 opacity-0 group-hover:opacity-100 cursor-pointer z-10"
+                  title="Delete room"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
 
                 <div>
                   {/* Topic & Badges */}
