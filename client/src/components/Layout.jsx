@@ -60,9 +60,17 @@ export default function Layout() {
                 </button>
               </div>
             ) : (
-              <div className="hidden sm:flex items-center">
-                <GoogleOneTap clientId={GOOGLE_CLIENT_ID} />
-              </div>
+              <>
+                <Link
+                  to="/login"
+                  className="sm:hidden text-xs font-bold text-[var(--color-forest)] hover:opacity-80 transition-opacity"
+                >
+                  Sign in
+                </Link>
+                <div className="hidden sm:flex items-center">
+                  <GoogleOneTap clientId={GOOGLE_CLIENT_ID} />
+                </div>
+              </>
             )}
           </div>
         </div>
