@@ -9,19 +9,20 @@ function deriveStatus(room) {
   return 'expired';
 }
 
-async function createRoom({ topic, creatorNickname, durationMinutes, maxParticipants }) {
+async function createRoom({ topic, creatorNickname, creatorUserId, durationMinutes, maxParticipants }) {
   const startedAt = new Date();
   const activeEndsAt = new Date(startedAt.getTime() + durationMinutes * 60000);
   const archiveEndsAt = new Date(activeEndsAt.getTime() + 24 * 60 * 60000);
 
   const result = await query(
     `INSERT INTO rooms
-       (topic, creator_nickname, max_participants, duration_minutes, started_at, active_ends_at, archive_ends_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+       (topic, creator_nickname, creator_user_id, max_participants, duration_minutes, started_at, active_ends_at, archive_ends_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING *`,
     [
       topic,
       creatorNickname,
+      creatorUserId || null,
       maxParticipants || DEFAULT_MAX_PARTICIPANTS,
       durationMinutes,
       startedAt,
@@ -60,6 +61,20 @@ async function listActiveRooms(sort = 'ending_soon') {
   return result.rows.map((room) => ({ ...room, status: deriveStatus(room) }));
 }
 
+async function listUserRooms(creatorUserId) {
+  if (!creatorUserId) return [];
+  const result = await query(
+    `SELECT r.*, COUNT(p.id)::int AS participant_count
+     FROM rooms r
+     LEFT JOIN participants p ON p.room_id = r.id
+     WHERE r.creator_user_id = $1
+     GROUP BY r.id
+     ORDER BY r.created_at DESC`,
+    [creatorUserId]
+  );
+  return result.rows.map((room) => ({ ...room, status: deriveStatus(room) }));
+}
+
 async function getRoomById(roomId) {
   const result = await query(`SELECT * FROM rooms WHERE id = $1`, [roomId]);
   if (result.rows.length === 0) return null;
@@ -72,4 +87,5 @@ async function deleteRoom(roomId) {
   return result.rows.length > 0;
 }
 
-module.exports = { createRoom, listActiveRooms, getRoomById, deriveStatus, deleteRoom };
+module.exports = { createRoom, listActiveRooms, listUserRooms, getRoomById, deriveStatus, deleteRoom };
+

@@ -1,26 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useLocation, useNavigate } from 'react-router-dom'
+import { useParams, useLocation, useNavigate, Link } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import NicknameModal from '../components/NicknameModal'
 import { getRoomSession, setRoomSession, clearRoomSession } from '../utils/session'
 import { API_BASE, apiFetch } from '../config'
-
-// Avatar background color generator based on nickname
-const AVATAR_COLORS = [
-  'from-pink-500 to-rose-500',
-  'from-purple-500 to-indigo-500',
-  'from-blue-500 to-cyan-500',
-  'from-emerald-500 to-teal-500',
-  'from-amber-500 to-orange-500',
-  'from-violet-500 to-purple-500',
-]
-
-function getAvatarColor(name) {
-  if (!name) return AVATAR_COLORS[0]
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash += name.charCodeAt(i)
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length]
-}
+import { useAuth } from '../context/AuthContext'
+import Avatar from '../components/Avatar'
 
 function formatTimeRemaining(activeEndsAt) {
   if (!activeEndsAt) return '00:00'
@@ -41,12 +26,13 @@ export default function ChatRoom() {
   const { id: roomId } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const savedSession = getRoomSession(roomId)
 
   const [room, setRoom] = useState(null)
   const [messages, setMessages] = useState([])
-  const [participants, setParticipants] = useState(new Set())
+  const [, setParticipants] = useState(new Set())
   const [sessionToken, setSessionToken] = useState(
     location.state?.sessionToken || savedSession.sessionToken || ''
   )
@@ -126,6 +112,11 @@ export default function ChatRoom() {
 
   // Join Room API Call (when prompted via modal)
   async function handleJoinSubmit(selectedNickname) {
+    if (!user) {
+      navigate(`/login?redirect=/room/${roomId}`)
+      return
+    }
+
     setJoinLoading(true)
     setJoinError('')
 
@@ -229,6 +220,10 @@ export default function ChatRoom() {
   // Send Message
   function handleSendMessage(e) {
     e.preventDefault()
+    if (!user) {
+      navigate(`/login?redirect=/room/${roomId}`)
+      return
+    }
     if (!inputMessage.trim() || !socketRef.current || isEnded) return
 
     socketRef.current.emit('send_message', { body: inputMessage.trim() }, (ack) => {
@@ -247,15 +242,21 @@ export default function ChatRoom() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const isJoined = Boolean(sessionToken && nickname && !showNicknameModal)
+
   return (
     <div className="relative min-h-[calc(100vh-4rem)] flex flex-col bg-[var(--color-bg-primary)]">
-      <NicknameModal
-        isOpen={showNicknameModal}
-        topic={room?.topic}
-        onSubmit={handleJoinSubmit}
-        isLoading={joinLoading}
-        error={joinError}
-      />
+      {/* Show Nickname modal only if logged in and not joined */}
+      {user && (
+        <NicknameModal
+          isOpen={showNicknameModal}
+          topic={room?.topic}
+          onSubmit={handleJoinSubmit}
+          isLoading={joinLoading}
+          error={joinError}
+          defaultNickname={user.name}
+        />
+      )}
 
       {/* Header Bar */}
       <div className="border-b border-[var(--color-border-subtle)] bg-white/90 backdrop-blur-md sticky top-16 z-10 px-4 py-3">
@@ -318,8 +319,18 @@ export default function ChatRoom() {
               )}
             </button>
 
+            {/* Unauthenticated Join Button */}
+            {!user && !isEnded && (
+              <Link
+                to={`/login?redirect=/room/${roomId}`}
+                className="btn-primary !py-1.5 !px-4 text-xs font-bold uppercase tracking-wider"
+              >
+                Log In To Join
+              </Link>
+            )}
+
             {/* Leave Room Button */}
-            {!showNicknameModal && (
+            {isJoined && (
               <button
                 onClick={handleLeaveRoom}
                 disabled={isLeaving}
@@ -334,6 +345,19 @@ export default function ChatRoom() {
           </div>
         </div>
       </div>
+
+      {/* Guest Notice Banner */}
+      {!user && !isEnded && (
+        <div className="bg-[var(--color-bg-mint)] border-b border-[var(--color-border-subtle)] px-4 py-2 text-center text-xs text-[var(--color-forest)] font-semibold flex items-center justify-center gap-2">
+          <svg className="w-4 h-4 text-[var(--color-forest)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>You are viewing this room as a guest.</span>
+          <Link to={`/login?redirect=/room/${roomId}`} className="underline font-bold hover:opacity-80">
+            Log in with Google to send messages and join the conversation.
+          </Link>
+        </div>
+      )}
 
       {/* Archive Warning Banner */}
       {isEnded && (
@@ -377,15 +401,7 @@ export default function ChatRoom() {
                   className={`flex items-start gap-2.5 ${isMe ? 'flex-row-reverse' : ''}`}
                 >
                   {/* User Avatar */}
-                  <div
-                    className={`w-8 h-8 rounded-sm ${
-                      isMe
-                        ? 'bg-[var(--color-forest)] text-[var(--color-accent-lime)]'
-                        : 'bg-[var(--color-bg-mint)] text-[var(--color-forest)] border border-[var(--color-border-subtle)]'
-                    } flex items-center justify-center font-bold text-xs shrink-0`}
-                  >
-                    {msg.nickname ? msg.nickname[0].toUpperCase() : '?'}
-                  </div>
+                  <Avatar name={msg.nickname} className="w-8 h-8 text-xs" />
 
                   {/* Message Bubble */}
                   <div className={`max-w-[75%] space-y-1 ${isMe ? 'items-end text-right' : ''}`}>
@@ -429,24 +445,38 @@ export default function ChatRoom() {
               placeholder={
                 isEnded
                   ? 'This room has ended.'
-                  : showNicknameModal
+                  : !user
+                  ? 'Log in to join and chat…'
+                  : !isJoined
                   ? 'Join to send messages…'
                   : 'Type your message…'
               }
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              disabled={isEnded || showNicknameModal}
+              disabled={isEnded || !isJoined}
+              onClick={() => {
+                if (!user) navigate(`/login?redirect=/room/${roomId}`)
+              }}
             />
-            <button
-              type="submit"
-              disabled={!inputMessage.trim() || isEnded || showNicknameModal}
-              className="btn-primary !py-2 !px-4 text-xs font-bold uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 rounded-sm"
-            >
-              <span>Send</span>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9-2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-            </button>
+            {!user ? (
+              <Link
+                to={`/login?redirect=/room/${roomId}`}
+                className="btn-primary !py-2 !px-4 text-xs font-bold uppercase tracking-wider rounded-sm"
+              >
+                Log In
+              </Link>
+            ) : (
+              <button
+                type="submit"
+                disabled={!inputMessage.trim() || isEnded || !isJoined}
+                className="btn-primary !py-2 !px-4 text-xs font-bold uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 rounded-sm cursor-pointer"
+              >
+                <span>Send</span>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9-2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
+            )}
           </div>
         </form>
       </div>

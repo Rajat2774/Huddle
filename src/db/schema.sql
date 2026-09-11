@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS rooms (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   topic TEXT NOT NULL,
   creator_nickname TEXT NOT NULL,
+  creator_user_id TEXT,
   max_participants INT NOT NULL DEFAULT 20,
   duration_minutes INT NOT NULL,
   started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -36,4 +37,15 @@ CREATE TABLE IF NOT EXISTS reports (
   message_id BIGINT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
   reporter_session TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE rooms ADD COLUMN IF NOT EXISTS creator_user_id TEXT;
+
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  picture TEXT,
+  signed_in_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_active_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

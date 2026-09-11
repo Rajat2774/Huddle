@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import NicknameModal from '../components/NicknameModal'
 import { getRoomSession, setRoomSession } from '../utils/session'
 import { apiFetch } from '../config'
+import { useAuth } from '../context/AuthContext'
 
 function formatCountdown(activeEndsAt) {
   if (!activeEndsAt) return 'Ended'
@@ -20,8 +21,9 @@ function formatCountdown(activeEndsAt) {
 
 export default function BrowseRooms() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [rooms, setRooms] = useState([])
-  const [sort, setSort] = useState('recent') // 'recent' | 'active'
+  const [sort, setSort] = useState('ending_soon') // 'ending_soon' | 'active'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -58,7 +60,14 @@ export default function BrowseRooms() {
   }, [])
 
   function handleCardClick(room) {
-    // Check if user already has session stored for this room
+    // 1. Check if user is logged in
+    if (!user) {
+      // Redirect unauthenticated user to login page
+      navigate(`/login?redirect=/room/${room.id}`)
+      return
+    }
+
+    // 2. Check if user already has session stored for this room
     const { sessionToken: existingToken, nickname: existingNick } = getRoomSession(room.id)
 
     if (existingToken && existingNick) {
@@ -116,6 +125,7 @@ export default function BrowseRooms() {
         onSubmit={handleJoinSubmit}
         isLoading={modalLoading}
         error={modalError}
+        defaultNickname={user?.name || ''}
       />
 
       {/* Header */}
@@ -198,6 +208,7 @@ export default function BrowseRooms() {
           {rooms.map((room) => {
             const isHighActivity = (room.recent_message_count || 0) >= 3
             const countdown = formatCountdown(room.active_ends_at)
+            const isCreator = user && room.creator_user_id === user.id
 
             return (
               <div
@@ -208,16 +219,18 @@ export default function BrowseRooms() {
                 {/* Subtle top lime indicator bar */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-[var(--color-accent-lime)] opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                {/* Delete Button */}
-                <button
-                  onClick={(e) => handleDeleteRoom(e, room.id)}
-                  className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-sm text-[var(--color-text-muted)] hover:text-red-600 hover:bg-red-50 transition-all duration-150 opacity-0 group-hover:opacity-100 cursor-pointer z-10"
-                  title="Delete room"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
+                {/* Delete Button (Visible if creator) */}
+                {isCreator && (
+                  <button
+                    onClick={(e) => handleDeleteRoom(e, room.id)}
+                    className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-sm text-[var(--color-text-muted)] hover:text-red-600 hover:bg-red-50 transition-all duration-150 opacity-0 group-hover:opacity-100 cursor-pointer z-10"
+                    title="Delete room"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                )}
 
                 <div>
                   {/* Topic & Badges */}

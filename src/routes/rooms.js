@@ -4,13 +4,13 @@ const roomService = require('../services/roomService');
 
 router.post('/', async (req, res, next) => {
   try {
-    const { topic, creatorNickname, durationMinutes, maxParticipants } = req.body;
+    const { topic, creatorNickname, creatorUserId, durationMinutes, maxParticipants } = req.body;
     if (!topic || !creatorNickname || !durationMinutes) {
       const err = new Error('topic, creatorNickname, and durationMinutes are required');
       err.status = 400;
       throw err;
     }
-    const room = await roomService.createRoom({ topic, creatorNickname, durationMinutes, maxParticipants });
+    const room = await roomService.createRoom({ topic, creatorNickname, creatorUserId, durationMinutes, maxParticipants });
     res.status(201).json(room);
   } catch (err) {
     next(err);
@@ -20,6 +20,15 @@ router.post('/', async (req, res, next) => {
 router.get('/', async (req, res, next) => {
   try {
     const rooms = await roomService.listActiveRooms(req.query.sort);
+    res.json(rooms);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/user/:userId', async (req, res, next) => {
+  try {
+    const rooms = await roomService.listUserRooms(req.params.userId);
     res.json(rooms);
   } catch (err) {
     next(err);
@@ -39,6 +48,7 @@ router.get('/:id', async (req, res, next) => {
     next(err);
   }
 });
+
 
 router.delete('/:id', async (req, res, next) => {
   try {

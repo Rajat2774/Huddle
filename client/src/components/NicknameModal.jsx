@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
-export default function NicknameModal({ isOpen, topic, onSubmit, isLoading, error: externalError }) {
-  const [nickname, setNickname] = useState('')
+export default function NicknameModal({ isOpen, topic, onSubmit, isLoading, error: externalError, defaultNickname = '' }) {
+  const [nickname, setNickname] = useState(defaultNickname)
   const [error, setError] = useState('')
 
   if (!isOpen) return null
@@ -54,7 +54,7 @@ export default function NicknameModal({ isOpen, topic, onSubmit, isLoading, erro
           <button
             type="submit"
             disabled={isLoading}
-            className="btn-primary w-full text-center py-3 text-xs uppercase tracking-wider font-bold"
+            className="btn-primary w-full text-center py-3 text-xs uppercase tracking-wider font-bold cursor-pointer"
           >
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">

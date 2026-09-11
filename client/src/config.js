@@ -1,5 +1,6 @@
 // Centralized API configuration for Vercel (frontend) + Render (backend) deployment
 export const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
 
 export async function apiFetch(endpoint, options = {}) {

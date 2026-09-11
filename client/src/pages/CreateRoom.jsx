@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { setRoomSession } from '../utils/session'
 import { apiFetch } from '../config'
+import { useAuth } from '../context/AuthContext'
 
 const DURATION_PRESETS = [
   { label: '30 min', value: 30 },
@@ -11,15 +12,37 @@ const DURATION_PRESETS = [
 
 export default function CreateRoom() {
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const [topic, setTopic] = useState('')
-  const [nickname, setNickname] = useState('')
+  const [nickname, setNickname] = useState(user?.name || '')
   const [durationMinutes, setDurationMinutes] = useState(60)
   const [customDuration, setCustomDuration] = useState('')
   const [isCustom, setIsCustom] = useState(false)
   const [maxParticipants, setMaxParticipants] = useState(20)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+
+  if (!user) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
+        <div className="max-w-md w-full glass-card p-8 text-center space-y-4 border border-[var(--color-border-subtle)] rounded-sm">
+          <div className="w-12 h-12 rounded-sm bg-[var(--color-bg-mint)] text-[var(--color-forest)] flex items-center justify-center mx-auto">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-[var(--color-forest)]">Authentication Required</h2>
+          <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+            Please log in with your Google account to create a room.
+          </p>
+          <Link to="/login?redirect=/create" className="btn-primary text-xs uppercase tracking-wider font-bold inline-block py-3 px-6">
+            Log In With Google
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   const activeDuration = isCustom ? Number(customDuration) : durationMinutes
 
@@ -45,6 +68,7 @@ export default function CreateRoom() {
         body: JSON.stringify({
           topic: topic.trim(),
           creatorNickname: nickname.trim(),
+          creatorUserId: user?.id || null,
           durationMinutes: activeDuration,
           maxParticipants,
         }),
