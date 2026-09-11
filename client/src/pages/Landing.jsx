@@ -5,11 +5,11 @@ const features = [
   {
     icon: (
       <svg className="w-6 h-6 text-[var(--color-forest)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
       </svg>
     ),
-    title: 'No signup, just a nickname',
-    description: 'Jump into any room instantly. No accounts, no passwords — just pick a name and start talking.',
+    title: 'Google One Tap Sign-In',
+    description: 'Fast, secure Google authentication. Sign in with one tap to create rooms and join discussions.',
   },
   {
     icon: (
@@ -50,7 +50,7 @@ export default function Landing() {
             </h1>
 
             <p className="animate-fade-in-up text-base sm:text-lg text-[var(--color-text-secondary)] leading-relaxed max-w-xl">
-              Create a room, share the link, and talk while it matters. No sign-up required — fast, lightweight, and temporary.
+              Create a room, share the link, and talk while it matters. Fast, lightweight, and temporary.
             </p>
 
             <div className="animate-fade-in-up flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
@@ -73,8 +73,8 @@ export default function Landing() {
                 <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase">Messages</p>
               </div>
               <div className="p-3 bg-[var(--color-bg-mint)] border border-[var(--color-border-subtle)] rounded-sm col-span-2 sm:col-span-1">
-                <p className="text-2xl font-black text-[var(--color-forest)]">0</p>
-                <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase">Signups Needed</p>
+                <p className="text-2xl font-black text-[var(--color-forest)]">1-Tap</p>
+                <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase">Google Auth</p>
               </div>
             </div>
           </div>
@@ -145,6 +145,127 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ─── Chatroom Snapshots / Experience Showcase Section ─── */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 border-t border-[var(--color-border-subtle)]">
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <span className="inline-block px-3 py-1 bg-[var(--color-bg-mint)] text-[var(--color-forest)] text-xs font-extrabold uppercase tracking-wider mb-3 rounded-sm border border-[var(--color-border-subtle)]">
+            Product Snapshots
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-black text-[var(--color-forest)] tracking-tight">
+            See Huddle In Action
+          </h2>
+          <p className="text-xs sm:text-sm text-[var(--color-text-secondary)] mt-2">
+            Explore live countdowns, room creation settings, and read-only archive buffers.
+          </p>
+        </div>
+
+        {/* Snapshot Cards Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Snapshot 1: Live Chatroom */}
+          <div className="bg-white border border-[var(--color-border-subtle)] rounded-sm p-5 shadow-sm space-y-4 hover:border-[var(--color-forest)] transition-colors">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--color-border-subtle)]">
+              <span className="px-2 py-0.5 rounded-sm bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
+                1. Live Room View
+              </span>
+              <span className="text-[11px] font-mono font-bold text-[var(--color-forest)] bg-[var(--color-accent-lime)] px-2 py-0.5 rounded-sm">
+                ⏱ 42:15 left
+              </span>
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-[var(--color-forest)]">AI Agents & System Architecture</h3>
+              <p className="text-[11px] text-[var(--color-text-muted)]">5 Participants Online</p>
+            </div>
+
+            {/* Chat feed preview */}
+            <div className="space-y-3 bg-[var(--color-bg-mint)] p-3 rounded-sm border border-[var(--color-border-subtle)]">
+              <FakeMessage name="Rahul" text="We should implement event-driven state sync." time="3:42 PM" color="bg-[var(--color-forest)] text-[var(--color-accent-lime)]" />
+              <FakeMessage name="Priya" text="Agreed! WebSockets keep the live latency under 50ms." time="3:43 PM" color="bg-[var(--color-accent-lime)] text-[var(--color-forest)]" />
+              <FakeMessage name="Arjun" text="And the live timer auto-closes room when complete." time="3:44 PM" color="bg-[var(--color-bg-input)] text-[var(--color-forest)]" />
+            </div>
+
+            <div className="pt-1 text-[11px] text-[var(--color-text-muted)] font-mono text-center">
+              Real-time WebSocket Chat Feed
+            </div>
+          </div>
+
+          {/* Snapshot 2: Time-Box Setup */}
+          <div className="bg-white border border-[var(--color-border-subtle)] rounded-sm p-5 shadow-sm space-y-4 hover:border-[var(--color-forest)] transition-colors">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--color-border-subtle)]">
+              <span className="px-2 py-0.5 rounded-sm bg-blue-100 text-blue-800 text-[10px] font-bold uppercase tracking-wider">
+                2. Room Creation
+              </span>
+              <span className="text-[11px] font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-sm">
+                Time-Boxed
+              </span>
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-[var(--color-forest)]">Setup Topic & Timer</h3>
+              <p className="text-[11px] text-[var(--color-text-muted)]">Configure room limits in seconds</p>
+            </div>
+
+            {/* Setup mockup */}
+            <div className="space-y-3 bg-zinc-50 p-3 rounded-sm border border-[var(--color-border-subtle)] font-mono text-xs">
+              <div>
+                <label className="text-[10px] text-zinc-500 uppercase font-bold">Topic</label>
+                <div className="bg-white border border-[var(--color-border-subtle)] p-2 rounded-sm text-[11px] font-sans font-semibold text-[var(--color-forest)] mt-1">
+                  Product Launch Discussion
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] text-zinc-500 uppercase font-bold">Duration Presets</label>
+                <div className="flex gap-2 mt-1">
+                  <span className="px-2.5 py-1 bg-white border border-zinc-200 text-zinc-600 rounded-sm text-[10px]">30 min</span>
+                  <span className="px-2.5 py-1 bg-[var(--color-forest)] text-[var(--color-accent-lime)] font-bold rounded-sm text-[10px]">1 hour</span>
+                  <span className="px-2.5 py-1 bg-white border border-zinc-200 text-zinc-600 rounded-sm text-[10px]">2 hours</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-1 text-[11px] text-[var(--color-text-muted)] font-mono text-center">
+              Flexible Timers & Participant Caps
+            </div>
+          </div>
+
+          {/* Snapshot 3: 24h Archive */}
+          <div className="bg-white border border-[var(--color-border-subtle)] rounded-sm p-5 shadow-sm space-y-4 hover:border-[var(--color-forest)] transition-colors">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--color-border-subtle)]">
+              <span className="px-2 py-0.5 rounded-sm bg-amber-100 text-amber-900 text-[10px] font-bold uppercase tracking-wider">
+                3. 24h Archive Buffer
+              </span>
+              <span className="text-[11px] font-mono font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-sm">
+                Read-Only
+              </span>
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-[var(--color-forest)]">Expired Discussion Replay</h3>
+              <p className="text-[11px] text-[var(--color-text-muted)]">Read-only window before cleanup</p>
+            </div>
+
+            {/* Archive mockup */}
+            <div className="space-y-2 bg-amber-50/50 p-3 rounded-sm border border-amber-200/60 text-xs">
+              <div className="p-2 bg-amber-100/60 text-amber-900 text-[10px] font-bold rounded-sm flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Room expired • Readable for 18h 45m
+              </div>
+              <div className="opacity-75 space-y-2 pt-1">
+                <FakeMessage name="Sneha" text="Here is the final summary link from our call." time="4:15 PM" color="bg-amber-800 text-amber-100" />
+                <FakeMessage name="Dev" text="Thanks everyone! Archived for review." time="4:16 PM" color="bg-zinc-800 text-white" />
+              </div>
+            </div>
+
+            <div className="pt-1 text-[11px] text-[var(--color-text-muted)] font-mono text-center">
+              24-Hour Read-Only Memory Buffer
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ─── Zaiflu Dark Forest Contrast Section ─── */}
       <section className="bg-[var(--color-forest)] text-white py-16 sm:py-20 mt-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -167,8 +288,8 @@ export default function Landing() {
             <div className="grid grid-cols-2 gap-4">
               <div className="p-5 bg-[var(--color-bg-dark-card)] border border-[rgba(255,255,255,0.1)] rounded-sm">
                 <p className="text-3xl font-black text-[var(--color-accent-lime)] mb-1">100%</p>
-                <p className="text-xs font-bold uppercase text-gray-300">Anonymous</p>
-                <p className="text-xs text-gray-400 mt-1">No phone numbers or emails required.</p>
+                <p className="text-xs font-bold uppercase text-gray-300">Verified</p>
+                <p className="text-xs text-gray-400 mt-1">Secure 1-tap Google account login.</p>
               </div>
               <div className="p-5 bg-[var(--color-bg-dark-card)] border border-[rgba(255,255,255,0.1)] rounded-sm">
                 <p className="text-3xl font-black text-[var(--color-accent-lime)] mb-1">24h</p>

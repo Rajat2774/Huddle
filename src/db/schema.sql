@@ -46,6 +46,10 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   picture TEXT,
+  is_signed_in BOOLEAN NOT NULL DEFAULT true,
   signed_in_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_active_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_signed_in BOOLEAN NOT NULL DEFAULT true;
+

@@ -34,8 +34,13 @@ router.get('/stats', async (req, res, next) => {
     const usersCountResult = await db.query('SELECT COUNT(*)::int AS count FROM users');
     const totalUsers = usersCountResult.rows[0]?.count || 0;
 
+    const signedInUsersCountResult = await db.query(
+      'SELECT COUNT(*)::int AS count FROM users WHERE is_signed_in = true'
+    );
+    const signedInUsers = signedInUsersCountResult.rows[0]?.count || 0;
+
     const usersResult = await db.query(
-      'SELECT id, email, name, picture, signed_in_at, last_active_at FROM users ORDER BY last_active_at DESC LIMIT 100'
+      'SELECT id, email, name, picture, is_signed_in, signed_in_at, last_active_at FROM users ORDER BY is_signed_in DESC, last_active_at DESC LIMIT 100'
     );
 
     const roomsCountResult = await db.query('SELECT COUNT(*)::int AS count FROM rooms');
@@ -51,6 +56,7 @@ router.get('/stats', async (req, res, next) => {
 
     return res.json({
       totalUsers,
+      signedInUsers,
       users: usersResult.rows,
       totalRooms,
       activeRooms,

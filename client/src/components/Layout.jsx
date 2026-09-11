@@ -32,12 +32,12 @@ export default function Layout() {
             {!isLanding && (
               <Link
                 to="/browse"
-                className="text-sm font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-forest)] transition-colors duration-150"
+                className="hidden sm:block text-sm font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-forest)] transition-colors duration-150"
               >
                 Browse Rooms
               </Link>
             )}
-            <Link to="/create" className="btn-primary text-xs font-bold !py-2 !px-4 uppercase tracking-wider">
+            <Link to="/create" className="btn-primary shrink-0 whitespace-nowrap text-[10px] sm:text-xs font-bold !py-2 !px-2.5 sm:!px-4 uppercase tracking-wider">
               Create Room
             </Link>
 
@@ -60,7 +60,7 @@ export default function Layout() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center">
+              <div className="hidden sm:flex items-center">
                 <GoogleOneTap clientId={GOOGLE_CLIENT_ID} />
               </div>
             )}

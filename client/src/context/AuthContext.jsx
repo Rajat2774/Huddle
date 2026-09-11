@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from 'react'
+import { apiFetch } from '../config'
 
 const AuthContext = createContext(null)
 
@@ -50,6 +51,13 @@ export function AuthProvider({ children }) {
   }
 
   const logout = () => {
+    if (user?.id) {
+      apiFetch('/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      }).catch((err) => console.error('Failed to notify backend on logout:', err))
+    }
     localStorage.removeItem(AUTH_STORAGE_KEY)
     setUser(null)
   }

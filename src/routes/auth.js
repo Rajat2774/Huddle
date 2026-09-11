@@ -38,12 +38,13 @@ router.post('/google', async (req, res, next) => {
     // Store/upsert user record in Postgres
     try {
       await db.query(
-        `INSERT INTO users (id, email, name, picture, signed_in_at, last_active_at)
-         VALUES ($1, $2, $3, $4, NOW(), NOW())
+        `INSERT INTO users (id, email, name, picture, is_signed_in, signed_in_at, last_active_at)
+         VALUES ($1, $2, $3, $4, true, NOW(), NOW())
          ON CONFLICT (id) DO UPDATE SET
            email = EXCLUDED.email,
            name = EXCLUDED.name,
            picture = EXCLUDED.picture,
+           is_signed_in = true,
            last_active_at = NOW()`,
         [user.id, user.email, user.name, user.picture]
       );
@@ -52,6 +53,23 @@ router.post('/google', async (req, res, next) => {
     }
 
     return res.json({ user });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.post('/logout', async (req, res, next) => {
+  const { userId } = req.body || {};
+  if (!userId) {
+    return res.json({ success: true });
+  }
+
+  try {
+    await db.query(
+      `UPDATE users SET is_signed_in = false, last_active_at = NOW() WHERE id = $1`,
+      [userId]
+    );
+    return res.json({ success: true });
   } catch (error) {
     return next(error);
   }

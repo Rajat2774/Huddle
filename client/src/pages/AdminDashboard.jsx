@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { apiFetch } from '../config'
+import { useAuth } from '../context/AuthContext'
 import Avatar from '../components/Avatar'
 
 export default function AdminDashboard() {
+  const { user } = useAuth()
   const [passcode, setPasscode] = useState(
     () => localStorage.getItem('huddle_admin_passcode') || ''
   )
@@ -42,10 +45,10 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    if (passcode) {
+    if (user && passcode) {
       fetchStats(passcode)
     }
-  }, [])
+  }, [user])
 
   const handlePasscodeSubmit = (e) => {
     e.preventDefault()
@@ -61,6 +64,30 @@ export default function AdminDashboard() {
     setIsAuthenticated(false)
     setStats(null)
     setError('')
+  }
+
+  // 1. Google Authentication Gate
+  if (!user) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
+        <div className="max-w-md w-full glass-card p-8 text-center space-y-5 border border-[var(--color-border-subtle)] rounded-sm shadow-md bg-white">
+          <div className="w-14 h-14 rounded-sm bg-emerald-50 text-[var(--color-forest)] flex items-center justify-center mx-auto border border-emerald-200">
+            <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-2xl font-black text-[var(--color-forest)] tracking-tight">Admin Authentication Required</h2>
+            <p className="text-xs text-[var(--color-text-secondary)] mt-2 leading-relaxed">
+              You must be signed in with a valid Google account to access the Admin Portal.
+            </p>
+          </div>
+          <Link to="/login?redirect=/admin" className="btn-primary text-xs font-bold py-3.5 px-6 uppercase tracking-wider block text-center cursor-pointer">
+            Sign In With Google First
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   // Passcode Lock Gate UI
@@ -172,8 +199,12 @@ export default function AdminDashboard() {
             </svg>
           </div>
           <div>
-            <p className="text-2xl font-black text-[var(--color-forest)]">{stats ? stats.totalUsers : '-'}</p>
-            <p className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Signed-in Users</p>
+            <p className="text-2xl font-black text-[var(--color-forest)]">
+              {stats ? (stats.signedInUsers ?? stats.totalUsers) : '-'}
+            </p>
+            <p className="text-[11px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+              Signed-in Users {stats?.totalUsers !== undefined && `(${stats.signedInUsers}/${stats.totalUsers})`}
+            </p>
           </div>
         </div>
 
@@ -221,9 +252,9 @@ export default function AdminDashboard() {
       <div className="bg-white border border-[var(--color-border-subtle)] rounded-sm shadow-sm overflow-hidden">
         <div className="p-5 border-b border-[var(--color-border-subtle)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-black text-[var(--color-forest)]">Signed-in Users</h2>
+            <h2 className="text-lg font-black text-[var(--color-forest)]">User Registry</h2>
             <p className="text-xs text-[var(--color-text-secondary)]">
-              List of users who authenticated via Google One Tap login.
+              List of registered Google authentication users and their current sign-in status.
             </p>
           </div>
 
@@ -244,7 +275,7 @@ export default function AdminDashboard() {
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="p-8 text-center text-xs text-[var(--color-text-muted)]">
-            {search ? 'No users matching search query.' : 'No users signed in yet.'}
+            {search ? 'No users matching search query.' : 'No users registered yet.'}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -253,6 +284,7 @@ export default function AdminDashboard() {
                 <tr className="bg-zinc-50 border-b border-[var(--color-border-subtle)] text-[var(--color-text-muted)] uppercase font-mono text-[10px]">
                   <th className="py-3 px-4">User</th>
                   <th className="py-3 px-4">Email</th>
+                  <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4">First Login</th>
                   <th className="py-3 px-4">Last Active</th>
                 </tr>
@@ -265,6 +297,17 @@ export default function AdminDashboard() {
                       <span className="font-sans font-bold text-[var(--color-forest)]">{u.name}</span>
                     </td>
                     <td className="py-3 px-4 text-[var(--color-text-secondary)]">{u.email}</td>
+                    <td className="py-3 px-4">
+                      {u.is_signed_in !== false ? (
+                        <span className="px-2 py-0.5 rounded-sm bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase">
+                          Signed In
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-sm bg-zinc-100 text-zinc-600 text-[10px] font-bold uppercase">
+                          Signed Out
+                        </span>
+                      )}
+                    </td>
                     <td className="py-3 px-4 text-[var(--color-text-muted)]">
                       {new Date(u.signed_in_at).toLocaleString()}
                     </td>
