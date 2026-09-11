@@ -1,6 +1,8 @@
 const { query } = require('../db');
 
 const scheduledRooms = new Map(); // roomId -> timeout handle
+const ROOM_CLEANUP_INTERVAL_MS = 60 * 1000;
+let cleanupInterval;
 
 function scheduleRoomEnd(io, room) {
   if (scheduledRooms.has(room.id)) return;
@@ -22,4 +24,25 @@ async function scheduleAllActiveRooms(io) {
   result.rows.forEach((room) => scheduleRoomEnd(io, room));
 }
 
-module.exports = { scheduleRoomEnd, scheduleAllActiveRooms };
+async function cleanupExpiredRooms() {
+  const result = await query(`DELETE FROM rooms WHERE archive_ends_at < now() RETURNING id`);
+  if (result.rowCount > 0) {
+    console.log(`Removed ${result.rowCount} expired room(s)`);
+  }
+  return result.rowCount;
+}
+
+function startRoomCleanupJob() {
+  if (cleanupInterval) return;
+
+  const runCleanup = () => {
+    cleanupExpiredRooms().catch((err) => {
+      console.error('Failed to clean up expired rooms', err);
+    });
+  };
+
+  runCleanup();
+  cleanupInterval = setInterval(runCleanup, ROOM_CLEANUP_INTERVAL_MS);
+}
+
+module.exports = { scheduleRoomEnd, scheduleAllActiveRooms, cleanupExpiredRooms, startRoomCleanupJob };
