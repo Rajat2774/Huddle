@@ -1,6 +1,6 @@
 # Huddle
 
-Huddle is a real-time chat platform for topic-based rooms with timed sessions, Google authentication, admin tools, and live messaging over Socket.IO. It combines a Node.js/Express backend with a React + Vite frontend to create a lightweight social chat experience.
+Huddle is a real-time chat platform for topic-based rooms with timed sessions, Google authentication, emoji support, admin tools, and live messaging over Socket.IO. It combines a Node.js/Express backend with a React + Vite frontend to create a lightweight social chat experience.
 
 ## Overview
 
@@ -8,7 +8,7 @@ Users can:
 
 - Create time-boxed discussion rooms around a topic
 - Join rooms with a nickname and session token
-- Send live messages in real time
+- Send live messages with rich **emoji support** (interactive picker with search & categories)
 - Browse active rooms and room history
 - Sign in via Google for a more complete user experience
 - Access an admin dashboard for user and room management
@@ -16,10 +16,10 @@ Users can:
 ## Tech Stack
 
 - Backend: Node.js, Express, Socket.IO, PostgreSQL
-- Frontend: React 19, Vite, React Router, Tailwind CSS
+- Frontend: React 19, Vite, React Router, Tailwind CSS, `emoji-picker-react`
 - Auth: Google One Tap / Google ID token verification
-- Database: PostgreSQL via `pg`
-- Infrastructure: Docker Compose for local Postgres setup
+- Database: NeonDB (Serverless PostgreSQL) via `pg`
+- Infrastructure: Docker Compose (optional for local Postgres fallback)
 
 ## Project Structure
 
@@ -51,15 +51,15 @@ Users can:
 Before you start, make sure you have:
 
 - Node.js 18+ and npm
-- Docker Desktop or Docker Engine
+- A NeonDB PostgreSQL database instance (or local Docker Postgres)
 - A Google Cloud project with OAuth credentials (optional for local auth testing, but recommended)
 
 ## Environment Variables
 
-Create a root `.env` file with the following values:
+Create a root `.env` file with your NeonDB database URL:
 
 ```env
-DATABASE_URL=postgresql://chatroom:chatroom@localhost:5432/chatroom
+DATABASE_URL=postgresql://<user>:<password>@<neon-hostname>/neondb?sslmode=require
 PORT=3000
 GOOGLE_CLIENT_ID=your_google_client_id_here
 ADMIN_KEY=your_secure_admin_key_here
@@ -94,13 +94,9 @@ npm install
 cd ..
 ```
 
-### 2) Start PostgreSQL with Docker
+### 2) Database Setup (NeonDB or Docker)
 
-```bash
-docker compose up -d
-```
-
-This starts the local PostgreSQL service on port `5432` using the values in `docker-compose.yml`.
+Ensure your `DATABASE_URL` in `.env` points to your NeonDB PostgreSQL database (or start a local Postgres instance via `docker compose up -d`).
 
 ### 3) Run database migrations
 
@@ -147,6 +143,12 @@ http://localhost:5173
 
 Open that URL in your browser to use the app.
 
+## Key Features
+
+- **Interactive Emoji Picker**: Integrated `emoji-picker-react` component in the chat room input allowing users to search, pick, and insert emojis at their cursor position.
+- **NeonDB Integration**: Fully hosted serverless PostgreSQL cloud database backend for persistent room management and chat history.
+- **Real-time Communication**: Instant messaging powered by Socket.IO rooms.
+
 ## Common Development Commands
 
 From the root:
@@ -188,16 +190,11 @@ The app also uses Socket.IO for real-time message delivery inside rooms.
 
 ## Troubleshooting
 
-### Postgres connection issues
+### Database connection issues (NeonDB / Postgres)
 
 If the database refuses connections:
 
-```bash
-docker compose ps
-docker compose logs postgres
-```
-
-Then verify that your `DATABASE_URL` matches the running container configuration.
+Verify that your `DATABASE_URL` in `.env` is formatted correctly with `sslmode=require` for NeonDB connection pooling.
 
 ### Frontend cannot reach the backend
 
@@ -209,9 +206,10 @@ Ensure:
 
 - `GOOGLE_CLIENT_ID` is set in the root `.env`
 - `VITE_GOOGLE_CLIENT_ID` is set in `client/.env.local`
-- The OAuth client ID in Google Cloud matches the correct origin and domain
+- The OAuth client ID in Google Cloud matches the correct origin and domain (`http://localhost:5173`)
 
 ## License
 
 This project is for educational and local development use unless otherwise stated by the repository owner.
+
 
