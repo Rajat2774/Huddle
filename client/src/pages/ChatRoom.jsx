@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom'
 import { io } from 'socket.io-client'
+import EmojiPicker, { Theme } from 'emoji-picker-react'
 import NicknameModal from '../components/NicknameModal'
 import { getRoomSession, setRoomSession, clearRoomSession } from '../utils/session'
 import { API_BASE, apiFetch } from '../config'
@@ -41,6 +42,7 @@ export default function ChatRoom() {
   )
 
   const [inputMessage, setInputMessage] = useState('')
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showNicknameModal, setShowNicknameModal] = useState(!sessionToken || !nickname)
   const [joinLoading, setJoinLoading] = useState(false)
   const [joinError, setJoinError] = useState('')
@@ -51,6 +53,9 @@ export default function ChatRoom() {
 
   const socketRef = useRef(null)
   const messagesEndRef = useRef(null)
+  const inputRef = useRef(null)
+  const emojiPickerRef = useRef(null)
+  const emojiButtonRef = useRef(null)
 
   // Sync state into persistent storage
   useEffect(() => {
@@ -58,6 +63,54 @@ export default function ChatRoom() {
       setRoomSession(roomId, sessionToken, nickname)
     }
   }, [roomId, sessionToken, nickname])
+
+  // Close emoji picker when clicking outside or pressing Escape
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target) &&
+        !emojiButtonRef.current?.contains(event.target)
+      ) {
+        setShowEmojiPicker(false)
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setShowEmojiPicker(false)
+      }
+    }
+
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('keydown', handleKeyDown)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [showEmojiPicker])
+
+  // Insert selected emoji at cursor position
+  function handleEmojiSelect(emojiData) {
+    const emoji = emojiData.emoji
+    const input = inputRef.current
+    if (input) {
+      const start = input.selectionStart ?? inputMessage.length
+      const end = input.selectionEnd ?? inputMessage.length
+      const newText = inputMessage.substring(0, start) + emoji + inputMessage.substring(end)
+      setInputMessage(newText)
+
+      setTimeout(() => {
+        input.focus()
+        const newCursorPos = start + emoji.length
+        input.setSelectionRange(newCursorPos, newCursorPos)
+      }, 0)
+    } else {
+      setInputMessage((prev) => prev + emoji)
+    }
+  }
 
   // Auto-scroll to bottom of chat
   const scrollToBottom = () => {
@@ -231,6 +284,7 @@ export default function ChatRoom() {
         alert(ack.error)
       } else {
         setInputMessage('')
+        setShowEmojiPicker(false)
       }
     })
   }
@@ -438,10 +492,47 @@ export default function ChatRoom() {
 
         {/* Input Bar */}
         <form onSubmit={handleSendMessage} className="relative mt-auto">
-          <div className="bg-white border border-[var(--color-border-subtle)] p-2 flex items-center gap-2 rounded-sm shadow-sm">
+          {/* Emoji Picker Popover */}
+          {showEmojiPicker && (
+            <div
+              ref={emojiPickerRef}
+              className="absolute bottom-full mb-3 left-0 z-30 shadow-2xl border border-[var(--color-border-subtle)] rounded-sm overflow-hidden animate-fade-in-up"
+            >
+              <EmojiPicker
+                onEmojiClick={handleEmojiSelect}
+                autoFocusSearch={false}
+                theme={Theme.LIGHT}
+                searchPlaceHolder="Search emoji..."
+                width={340}
+                height={380}
+                previewConfig={{ showPreview: false }}
+              />
+            </div>
+          )}
+
+          <div className="bg-white border border-[var(--color-border-subtle)] p-2 flex items-center gap-2 rounded-sm shadow-sm focus-within:border-[var(--color-forest)] transition-colors">
+            {/* Emoji Toggle Button */}
+            <button
+              ref={emojiButtonRef}
+              type="button"
+              onClick={() => setShowEmojiPicker((prev) => !prev)}
+              disabled={isEnded || !isJoined}
+              title="Add emoji"
+              className={`p-2 rounded-sm text-lg leading-none transition-colors flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                showEmojiPicker
+                  ? 'bg-[var(--color-bg-mint)] text-[var(--color-forest)] border border-[var(--color-border-subtle)]'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-forest)] hover:bg-zinc-100'
+              }`}
+            >
+              <svg className="w-5 h-5 text-[var(--color-forest)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+
             <input
+              ref={inputRef}
               type="text"
-              className="flex-1 bg-transparent px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none disabled:opacity-50"
+              className="flex-1 bg-transparent px-2 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none disabled:opacity-50"
               placeholder={
                 isEnded
                   ? 'This room has ended.'
@@ -458,6 +549,7 @@ export default function ChatRoom() {
                 if (!user) navigate(`/login?redirect=/room/${roomId}`)
               }}
             />
+
             {!user ? (
               <Link
                 to={`/login?redirect=/room/${roomId}`}
@@ -483,3 +575,4 @@ export default function ChatRoom() {
     </div>
   )
 }
+
